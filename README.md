@@ -15,7 +15,7 @@ How to compile:
 
     cmake . && cmake --build .
   
-example for crypting:
+example for encrypting:
 
     ./nefor -f target.exe -t target.exe -k 12345 -m encrypt 
 
