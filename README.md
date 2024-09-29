@@ -12,5 +12,6 @@ The tool can crypt file
 -h: HELP
 
 How to compile:
-  cmake . && cmake --build .
+
+    cmake . && cmake --build .
   
