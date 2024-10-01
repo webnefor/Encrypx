@@ -10,7 +10,7 @@ add_executable( nefor
 
 	src/config.h
         src/nefor.c
-        src/encrypt.c
+        src/f_encrypt.c
         src/strf.c
 
 )
