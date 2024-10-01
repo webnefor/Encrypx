@@ -1,28 +1,8 @@
 
 #include "config.h"
-#include <stdio.h>
-
-//
-// Что я хочу?
-//
-// Чтобы из двух файлов, создавался один и шифровались
-// В зависимости от пароля, должно выдаваться данные
-// зависящие от этого пароля, а другие должны уничтожаться 
-// "эдакий план Б"
-//
-// 1) Для начала зашифровать файл главный
-//
-// 2) Потом второй
-//
-// 3) 
-//
-
-// nefor -f main.txt -t trash.txt -k 12345
 
 
 int main(int argc, char *argv[]) {
-    
-
     
     uint32_t __result;
     uint64_t sum;
@@ -57,17 +37,17 @@ int main(int argc, char *argv[]) {
     switch ( sum ) 
     {   
         case ENCRYPT:
-            __result = encrypter(&__p_files, data_of_terminal.password);
+            __result = f_encrypt(&__p_files, data_of_terminal.password);
             h_error(&__result); // event errors
 
             break;
 
         case DECRYPT:
             if (!check_hsum(&__p_files))  // check true or false of the hash of the file
-                __result = decrypter(&__p_files, data_of_terminal.password);
+                __result = f_decrypt(&__p_files, data_of_terminal.password);
             else 
             {
-                printf("[PASSWORD]: it ain't correct!\n");
+                printf("[Password]: ain't correct!\n");
                 exit(0);
             } 
             h_error(&__result);
@@ -82,6 +62,7 @@ int main(int argc, char *argv[]) {
             return FAILED;
     }
 
+    printf("[+] Done\n");
     return 0;
 }
 
