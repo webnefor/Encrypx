@@ -5,15 +5,13 @@ cmake_minimum_required(VERSION 3.20)
 project(Encrypx)
 
 
-
 add_executable( encrypx
 
 	src/config.h
-        src/nefor.c
+        src/encrypx.c
         src/f_encrypt.c
         src/strf.c
 
 )
 
 set_property(TARGET encrypx PROPERTY C_STANDARD 11)
-
