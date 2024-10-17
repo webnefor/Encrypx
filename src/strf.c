@@ -126,7 +126,7 @@ uint32_t h_error ( const unsigned int *p_result ) {
     return OK;
 }
 
-bool is_empty( char *str[]) {
+bool is_empty(char *str) {
 
     /*
      * Checks if a given string is empty or NULL.

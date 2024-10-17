@@ -86,7 +86,7 @@ extern unsigned int importSum       (desc *_pdescr                          );
 extern unsigned int validateHash    (desc *__pdescr                         );
 
 extern void         progress_bar    (int i                                  );
-extern bool         is_empty        (char *str []                           );
+extern bool         is_empty        (char *str                            );
 extern void         show_help       ();
 
 
