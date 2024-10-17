@@ -137,7 +137,8 @@ bool is_empty(char *str) {
         return 0;
 
     char *reserved[] = {TRASH, MODE, FILE, KEY};
-    for (int i = 0; i < strlen(reserved); i++) {
+
+    for (int i = 0; i < (sizeof(reserved) / 8); i++) {
         if (strcmp(str, reserved[i]) == 0)
         {
             printf(RED "[-]" " " DEFAULT "Using a reserved value\n");
