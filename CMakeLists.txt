@@ -2,11 +2,11 @@
 cmake_minimum_required(VERSION 3.20)
 
 
-project(nefor)
+project(Encrypx)
 
 
 
-add_executable( nefor
+add_executable( encrypx
 
 	src/config.h
         src/nefor.c
@@ -15,5 +15,5 @@ add_executable( nefor
 
 )
 
-set_property(TARGET nefor PROPERTY C_STANDARD 11)
+set_property(TARGET encrypx PROPERTY C_STANDARD 11)
 

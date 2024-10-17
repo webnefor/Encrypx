@@ -1,8 +1,10 @@
 
 #include "config.h"
 
-static uint64_t move_from = 0;
+#include <sys/types.h>
+#include <pthread.h>
 
+static __uint128_t move_from = 0;
 
 u_int64_t hsum(char *password) {
     
@@ -56,151 +58,6 @@ u_int64_t hsum(char *password) {
     return abs(hash);
 }
 
-uint32_t f_decrypt(desc * __pdescr, char *password) {
-
-    char data_handler[BUFFER_SIZE],__hash[BUFFER_SIZE], c;
-    int bytesRead, i;
-
-    snprintf(__hash, sizeof(__hash), "%d", __pdescr->hsum);
-
-    int totalBytesToRead = move_from - strlen(__hash) - strlen(FIND_HASH);
-    
-    while ((bytesRead = fread(data_handler, sizeof(char), BUFFER_SIZE, __pdescr->p_file)) > 0) {
-        for (i = 0; i < bytesRead && i < move_from; i++) {
-            data_handler[i] = ~data_handler[i] + (C_XOR_1 << 2) - (C_XOR_2 & C_XOR_3);
-            data_handler[i] ^= __pdescr->hsum;
-        }
-        fseek(__pdescr->p_file, -bytesRead, SEEK_CUR);
-        fwrite(data_handler, sizeof(char), bytesRead, __pdescr->p_file);
-    }
-    truncate(__pdescr->file_name,totalBytesToRead);
-
-    return 0;
-}
-
-uint32_t f_encrypt(desc * p_files__, char *password) {
-
-    // fseek(p_files__->p_file, 0, SEEK_END);
-    // move_from = ftell(p_files__->p_file);
-    // fseek(p_files__->p_file, 0, SEEK_SET);
-
-    set_size_of_file(p_files__);
-
-    int __err;
-    char c;
-    // fseek(p_files__->p_file, 0, SEEK_SET);
-    char buffer[BUFFER_SIZE];
-    size_t bytesRead;
-    int i;
-
-    // Перемещение указателя файла в начало
-    fseek(p_files__->p_file, 0, SEEK_SET);
-
-    // Чтение файла блоками
-    while ((bytesRead = fread(buffer, sizeof(char), BUFFER_SIZE, p_files__->p_file)) > 0) {
-
-        for (i = 0; i < bytesRead && i < move_from; i++) {
-            buffer[i] ^= p_files__->hsum;
-            buffer[i] = ~buffer[i] + (C_XOR_1 << 2) - (C_XOR_2 & C_XOR_3);
-        }
-        // Запись обратно в файл
-        fseek(p_files__->p_file, -bytesRead, SEEK_CUR);
-        fwrite(buffer, sizeof(char), bytesRead, p_files__->p_file);
-
-        move_from -= bytesRead;  // Уменьшаем количество оставшихся символов для обработки
-
-        if (move_from <= 0) 
-            break;  // Выход из цикла, если обработаны все символы
-    }
-
-   __err = import_hsum(p_files__);
-
-    h_error(&__err);
-
-    fclose(p_files__->p_file);
-
-    return 0;
-}
-
-unsigned int import_hsum(desc * __pdescr) {
-
-    int result, hash;
-    off_t lens;
-    size_t written;
-
-    char buffer[256] = FIND_HASH, *position;
-
-    hash = __pdescr->hsum;
-
-    position = buffer + strlen(FIND_HASH);
-
-    result = sprintf(position, "%d", hash);
-
-    if (result < 0) {
-        perror("[import_hsum] ");
-        fclose(__pdescr->p_file);
-        fclose(__pdescr->p_trash_file);
-        return FAILED;
-    }
-
-    lens = strlen(buffer);
-
-    if (fprintf(__pdescr->p_file, "%s", buffer) < 0) {
-        fclose(__pdescr->p_file);
-        fclose(__pdescr->p_trash_file);
-        return FAILED;
-    }
-    
-    return 0;
-}
-
-unsigned int check_hsum(desc *__pdescr) {
-
-    set_size_of_file(__pdescr);
-
-    char __hash[255] = {0},c;
-    char *buff = FIND_HASH; // Hotfx
-    size_t bytesRead;
-    char buffer[BUFFER_SIZE];
-    snprintf(__hash, sizeof(__hash), "%d", __pdescr->hsum);
-    
-    int r = 0, z = 0, f = 0, p = 0;
-
-    int i = 0;    
-
-    while ((bytesRead = fread(buffer, sizeof(char), BUFFER_SIZE, __pdescr->p_file)) > 0) {
-        
-        fseek(__pdescr->p_file, bytesRead, SEEK_CUR);
-
-        for (;i < bytesRead;i++) {
-            if (buffer[i] == __hash[z] && f == 1)
-            {
-                z++;
-                if (z == strlen(__hash))
-                {
-                    fseek(__pdescr->p_file, 0, SEEK_SET);
-                    return 0;
-                }
-            }
-
-            if (buffer[i] == buff[r] && f != 1) 
-            {
-                if (r == strlen(buff)-1) {
-
-                    f = 1;
-                }
-                r += 1;
-            }
-            else 
-            {
-                p=0;
-            }
-        }
-        i = 0;
-    }
-    return 1;
-}
-
 uint64_t set_size_of_file (desc * p_file ) {
 
     fseek(p_file->p_file, 0, SEEK_END);
@@ -210,9 +67,178 @@ uint64_t set_size_of_file (desc * p_file ) {
     return 0;
 }
 
+uint32_t f_decrypt(desc * _pdescr, char *password){
+
+    __uint128_t i;
+    size_t bytesRead;
+    char * data_handler, __hash[BUFFER_SIZE], c;
+    long int countXor __attribute__((aligned(sizeof(unsigned int))));
+    unsigned int xorValue __attribute__((visibility("hidden")));
+
+    snprintf(__hash, sizeof(__hash), "%d", _pdescr->hsum);
+
+    off_t offbyte = move_from - (strlen(__hash) + strlen(FIND_HASH));
+     
+    fseek(_pdescr->p_file, 0, SEEK_SET);
+
+    data_handler = calloc(BUFFER_SIZE, sizeof(char));
+    i = 0;
+
+    xorValue= (C_XOR_1 << 2) - (C_XOR_2 & C_XOR_3);
+    countXor = SLOW;
+
+    while (i < move_from)
+    {
+        bytesRead = fread(data_handler, sizeof(char), BUFFER_SIZE, _pdescr->p_file);
+
+        fseek(_pdescr->p_file, -bytesRead, SEEK_CUR);
+
+        i+= bytesRead;
+
+        for (int li = 0; li < bytesRead; li++)
+        {
+            data_handler[li] = (data_handler[li] ^= ((xorValue << 2))) - countXor;
+            data_handler[li] ^= _pdescr->hsum;
+        }
+
+      fwrite(data_handler, sizeof(char), bytesRead, _pdescr->p_file);
+  }
+
+  fclose(_pdescr->p_file);
+  free(data_handler);
+  truncate(_pdescr->file_name, offbyte);
+  return 0;
+}
+
+uint32_t f_encrypt(desc * _pdescr, char *password)
+{
+    set_size_of_file(_pdescr);
+
+    unsigned int xorValue __attribute__((visibility("hidden")));
+    long int countXor __attribute__((aligned(sizeof(unsigned int))));
+    uint_fast64_t i;
+    uint_fast64_t li;
+    int __err;
+    char * data_handler;
+    size_t bytesRead;
+
+    data_handler = malloc(BUFFER_SIZE);
+    i = 0;
+    bytesRead = 0;
+
+    xorValue = (C_XOR_1 << 2) - (C_XOR_2 & C_XOR_3);
+    countXor = SLOW;
+
+    while (i < move_from)
+    {
+        bytesRead = fread(data_handler, sizeof(char), BUFFER_SIZE, _pdescr->p_file);
+
+        fseek(_pdescr->p_file, -bytesRead, SEEK_CUR);
+
+        i+= bytesRead;
+
+        for (int li = 0; li < bytesRead; li++)
+        {
+            data_handler[li] ^= _pdescr->hsum;
+            data_handler[li] = (data_handler[li] ^= ((xorValue << 2))) + countXor;
+        }
+
+        fwrite(data_handler, sizeof(char), bytesRead, _pdescr->p_file);
+    }
+
+    free(data_handler);
+
+    __err = importSum(_pdescr);
+
+    h_error(&__err);
+
+    fclose(_pdescr->p_file);
+
+    return 0;
+}
+
+unsigned int importSum(desc * _pdescr) {
+
+    fseek(_pdescr->p_file, 0, SEEK_END);
+
+    int result, hash;
+
+    char buffer[256] = FIND_HASH, *position;
+
+    hash = _pdescr->hsum;
+
+    position = buffer + strlen(FIND_HASH);
+
+    result = sprintf(position, "%d", hash);
+
+    if (result < 0) {
+        perror("[importSum] ");
+        fclose(_pdescr->p_file);
+        fclose(_pdescr->p_trash_file);
+        return FAILED;
+    }
+
+    if (fprintf(_pdescr->p_file, "%s", buffer) < 0) {
+        fclose(_pdescr->p_file);
+        fclose(_pdescr->p_trash_file);
+        return FAILED;
+    }
+  
+    return 0;
+}
+
+unsigned int validateHash(desc * _pdescr) {
+
+    set_size_of_file(_pdescr);
+
+    int bytes_to_read, result;
+    char * buffer, *position, str_of_the_hash[255] = FIND_HASH;
+
+    position = str_of_the_hash + strlen(FIND_HASH);
+
+    result = sprintf(position, "%lld", _pdescr->hsum);
+
+    h_error(&result);
+
+    bytes_to_read = strlen(position) + strlen(FIND_HASH);
+    buffer = (char *)calloc(bytes_to_read * 2, sizeof(char));
+
+
+    if (fseek(_pdescr->p_file, -bytes_to_read, SEEK_END) != 0) {
+        fclose(_pdescr->p_file);
+        return 1;
+    }
+
+    // Allocate buffer to store the read data
+    if (buffer == NULL) {
+        fclose(_pdescr->p_file);
+        return 1;
+    }
+
+    // Read the data from the file
+    size_t read_bytes = fread(buffer, sizeof(char),bytes_to_read, _pdescr->p_file);
+
+    if (read_bytes != bytes_to_read) {
+        free(buffer);
+        fclose(_pdescr->p_file);
+        return 1;
+    }
+
+    if (strcmp(buffer, str_of_the_hash) != 0) {
+      free(buffer);
+      fclose(_pdescr->p_file);
+      return 1;
+    }
+
+    // Null-terminate the buffer and print the content
+     buffer[bytes_to_read] = '\0';
+
+    // Clean up
+    free(buffer);
+
+    return 0;
+}
 
 void progress_bar( int i ) {
-
-    
 
 }
