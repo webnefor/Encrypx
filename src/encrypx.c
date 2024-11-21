@@ -1,6 +1,7 @@
 
 #include "config.h"
 
+
 int main(int argc, char *argv[]) {
 
     uint32_t _result;
@@ -59,7 +60,8 @@ int main(int argc, char *argv[]) {
             return FAILED;
     }
 
-    printf(GREEN "[+]" DEFAULT " " "Success\n");
-    return 0;
+    printf("\n" GREEN "[+]" DEFAULT " " "Success\n");
+
+    return OK;
 }
 
