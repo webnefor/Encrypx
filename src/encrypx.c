@@ -48,13 +48,12 @@ int main(int argc, char *argv[]) {
                 printf(RED "[-]" DEFAULT " " "The key ain't correct!\n");
                 exit(0);
             }
-
             h_error(&_result);
             break;
 
         default:
-            printf(RED "encrypx: " "cannot find command (%s)\n", data_of_terminal.mode);
-            printf(DEFAULT "\ttry -h to see more\n");
+            printf(RED "encrypx: " "Can't find the command (%s)\n", data_of_terminal.mode);
+            printf(DEFAULT "\tTry -h to see more\n");
             fclose(_p_files.p_file);
             fclose(_p_files.p_trash_file);
             return FAILED;

@@ -1,9 +1,9 @@
 
 // this is value for crypting
 
-#define RELEASE       "0.1.1"
+#define RELEASE       "0.2.1"
 
-#define FIND_HASH     "0xAAAFFFXX" // Hash of the file =
+#define FIND_HASH     "0xAAAAFFFF" // Hash of the file =
 
 #define C_XOR_1       0xcc9e2d51
 #define C_XOR_2       0x1b873593
@@ -23,7 +23,7 @@
 #define HIGH          8196
 #define FASTER        HIGH
 
-#define BUFFER_SIZE   (FASTER * 20)
+#define BUFFER_SIZE   (FASTER << 6)
 
 #define DataStream    ("r+a+w+b")
 #define RBW           ("rb+w")
@@ -41,11 +41,13 @@
 #include <errno.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <stddef.h>
+#include <fcntl.h>
 
 typedef struct of_args {
 
     /*
-        args of the terminal 
+        args of the terminal
     */
 
     char    *   path    ;
@@ -59,15 +61,16 @@ typedef struct of_args {
 
 typedef struct of_dsc {
 
-     /*
-        descriptor for changing the files
-     */
+    /*
+       descriptor for changing the files
+    */
 
+    int test;
     FILE        *   p_file      ;
     FILE        *   p_trash_file;
     u_int64_t       hsum        ;
     u_int64_t   *   p_elmn      ;
-    char        *   file_name   ;  
+    char        *   file_name   ;
 
 } desc;
 
@@ -77,8 +80,8 @@ extern u_int64_t    set_size_file   (desc*                                  );
 extern t_args       parse_args      ( int argc, char *argv[]                );
 extern desc         file_handler    ( t_args p_to_path                      );
 
-extern uint32_t     f_encrypt       ( desc * p_files__ , char *pssw         );
-extern uint32_t     f_decrypt       ( desc * p_files__ , char *pssw         );
+extern uint32_t     f_encrypt       (desc * dateList , char *pssw         );
+extern uint32_t     f_decrypt       (desc * pdescr , char *pssw         );
 
 extern uint64_t     hsum            ( char * pssw                           );
 extern uint32_t     h_error         ( const unsigned int *p_result          );
@@ -86,7 +89,7 @@ extern uint32_t     h_error         ( const unsigned int *p_result          );
 extern unsigned int importSum       ( desc *_pdescr                         );
 extern unsigned int validateHash    ( desc *__pdescr                        );
 
-extern void         progress_bar    ( int , int                             );
+extern void         progress_bar    ( uint64_t , uint64_t                   );
 extern bool         is_empty        ( char *str                             );
 
 extern void         show_help       (                                       );
@@ -97,5 +100,5 @@ extern void         show_help       (                                       );
 #define     MODE        "-m"
 #define     TRASH       "-t"
 #define     SPEED       "-s"
-#define     HELP        "-h"   
+#define     HELP        "-h"
 #define     VERSION     "-v"

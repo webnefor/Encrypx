@@ -1,11 +1,10 @@
 
 #include "config.h"
 
-
-static __uint128_t move_from = 0;
+__uint128_t move_from = 0;
 
 u_int64_t hsum(char *password) {
-    
+
     uint32_t len = strlen(password);
 
     uint32_t c1 = C_XOR_1;
@@ -65,106 +64,117 @@ uint64_t set_size_of_file (desc * p_file ) {
     return 0;
 }
 
-uint32_t f_decrypt(desc * _pdescr, char *password){
+uint32_t f_decrypt(desc * dateList, char *password){
 
-    __uint128_t i;
+    long bytesRead;
+    uint64_t progress = 0;
 
-    size_t bytesRead;
-    
     char * data_handler, __hash[BUFFER_SIZE], c;
-    
+
     int countXor __attribute__((aligned(sizeof(unsigned int))));
-    
+
     int xorValue __attribute__((visibility("hidden")));
 
-    snprintf(__hash, sizeof(__hash), "%d", _pdescr->hsum);
+    snprintf(__hash, sizeof(__hash), "%d", dateList->hsum);
 
-    off_t offbyte   = move_from - (strlen(__hash) + strlen(FIND_HASH));
-     
-    fseek(_pdescr->p_file, 0, SEEK_SET);
+    off_t offbyte = move_from - (strlen(__hash) + strlen(FIND_HASH));
 
-    data_handler    = calloc(BUFFER_SIZE, sizeof(char));
-
-    i               = 0;
+    data_handler = malloc(BUFFER_SIZE);
 
     xorValue        = (C_XOR_1 << 2) - (C_XOR_2 & C_XOR_3);
 
     countXor = SLOW;
 
-    while (i < move_from)
-    {
-        bytesRead = fread(data_handler, sizeof(char), \
-                            BUFFER_SIZE, _pdescr->p_file);
+    fseek(dateList->p_file, 0, SEEK_SET);
 
-        fseek(_pdescr->p_file, -bytesRead, SEEK_CUR);
+    do {
+        bytesRead = fread(data_handler, sizeof(char),
+                          BUFFER_SIZE, dateList->p_file);
 
-        i+= bytesRead;
+        progress += bytesRead;
 
-        for (int li = 0; li < bytesRead; li++)
+        fseek(dateList->p_file, -bytesRead , SEEK_CUR);
+
+        for (int i = 0, out = bytesRead; i <= bytesRead; i++, out--)
         {
-            data_handler[li] -= (C_XOR_1 + li);       
-            data_handler[li]  = (data_handler[li] ^= ((xorValue << 2))) - countXor;
-            data_handler[li] ^= _pdescr->hsum;
+            data_handler[i] ^= dateList->hsum;
+
+            data_handler[out + i] += (dateList->hsum & xorValue);
+
+            data_handler[i] -= (C_XOR_3 & (C_XOR_4+i));
+            data_handler[i] ^= (dateList->hsum & i);
+            data_handler[out] -= (C_XOR_3);
         }
 
-      fwrite(data_handler, sizeof(char), bytesRead, _pdescr->p_file);
-      progress_bar(i, move_from);
-  }
+        fwrite(data_handler, sizeof(char), bytesRead, dateList->p_file);
 
-  fclose(_pdescr->p_file);
-  free(data_handler);
-  truncate(_pdescr->file_name, offbyte);
-  return OK;
+        fseek(dateList->p_file, 0 , SEEK_CUR);
+        progress_bar(progress, move_from);
+
+    } while (bytesRead > 0);
+
+    fclose(dateList->p_file);
+    free(data_handler);
+    truncate(dateList->file_name, offbyte);
+
+    return OK;
+
 }
 
-uint32_t f_encrypt(desc * _pdescr, char *password)
+uint32_t f_encrypt(desc * dateList, char *password)
 {
-    set_size_of_file(_pdescr);
-    
+    set_size_of_file(dateList);
+    // printf("[[[%lld]]]\n",move_from );
     int xorValue __attribute__((visibility("hidden")));
     int countXor __attribute__((aligned(sizeof(unsigned int))));
     int __err;
-    
-    uint_fast64_t i;
-    
+
     char * data_handler;
-    
-    size_t bytesRead;
+
+    long bytesRead;
+    uint64_t progress = 0;
 
     data_handler = malloc(BUFFER_SIZE);
-    i = 0;
+
     bytesRead = 0;
 
     xorValue = (C_XOR_1 << 2) - (C_XOR_2 & C_XOR_3);
     countXor = SLOW;
 
-    while (i < move_from)
-    {
-        bytesRead = fread(data_handler, sizeof(char), \
-                            BUFFER_SIZE, _pdescr->p_file);
+    fseek(dateList->p_file, 0 , SEEK_SET);
 
-        fseek(_pdescr->p_file, -bytesRead, SEEK_CUR);
+    do {
+        bytesRead = fread(data_handler, sizeof(char),
+                          BUFFER_SIZE, dateList->p_file);
 
-        i+= bytesRead;
+        fseek(dateList->p_file, -bytesRead , SEEK_CUR);
+        progress += bytesRead;
 
-        for (uint_fast64_t k = 0; k < bytesRead; k++)
+        for (int i = bytesRead, out = 0; i >= 0 ; i--, out++)
         {
-            data_handler[k] ^= _pdescr->hsum;
-            data_handler[k] = (data_handler[k] ^= ((xorValue << 2))) + countXor; 
-            data_handler[k] += (C_XOR_1 + k);       
-        }
+            data_handler[i]     ^= (dateList->hsum & i);
+            data_handler[i]     += (C_XOR_3 & (C_XOR_4+i));
+            data_handler[out]   += (C_XOR_3);
 
-        fwrite(data_handler, sizeof(char), bytesRead, _pdescr->p_file);
-        progress_bar(i, move_from);
-    }
+            data_handler[out + i] -= (dateList->hsum & xorValue);
+
+            data_handler[i] ^= dateList->hsum;
+        };
+
+        fwrite(data_handler, sizeof(char), bytesRead, dateList->p_file);
+
+        fseek(dateList->p_file, 0 , SEEK_CUR);
+        progress_bar(progress, move_from);
+
+    } while (bytesRead > 0);
 
     free(data_handler);
 
-    __err = importSum(_pdescr);
+    __err = importSum(dateList);
 
     h_error(&__err);
 
-    fclose(_pdescr->p_file);
+    fclose(dateList->p_file);
 
     return OK;
 }
@@ -195,7 +205,7 @@ unsigned int importSum(desc * _pdescr) {
         fclose(_pdescr->p_trash_file);
         return FAILED;
     }
-  
+
     return 0;
 }
 
@@ -237,13 +247,13 @@ unsigned int validateHash(desc * _pdescr) {
     }
 
     if (strcmp(buffer, str_of_the_hash) != 0) {
-      free(buffer);
-      fclose(_pdescr->p_file);
-      return 1;
+        free(buffer);
+        fclose(_pdescr->p_file);
+        return 1;
     }
 
     // Null-terminate the buffer and print the content
-     buffer[bytes_to_read] = '\0';
+    buffer[bytes_to_read] = '\0';
 
     // Clean up
     free(buffer);
@@ -251,22 +261,22 @@ unsigned int validateHash(desc * _pdescr) {
     return 0;
 }
 
-void progress_bar(int progress, int total) 
+void progress_bar(uint64_t progress, uint64_t total)
 {
-    int barWidth    = 70; // wwidth of the progress bar
+    int barWidth    = 70; // width of the progress bar
     float ratio     = (float)progress / total;
     int pos         = barWidth * ratio;
-    
+
     printf("[");
 
     for (int i = 0; i < barWidth; ++i) {
         if (i < pos) {
-            printf("=");
+            printf(">");
         } else {
             printf(" ");
         }
     }
 
-    printf("] %.1f%%\r", ratio * 100); 
+    printf("] %.1f%%\r", ratio * 100);
     fflush(stdout); // flush te output buffer
 }
