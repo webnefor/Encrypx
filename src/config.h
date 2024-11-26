@@ -19,6 +19,10 @@
 #define FAILED        (-0x01)
 #define OK            0x0
 
+
+/*      DEBUG OUTPUT    */
+//#define DEBUG
+
 #define SLOW          2048
 #define HIGH          8196
 #define FASTER        HIGH
@@ -44,7 +48,7 @@
 #include <stddef.h>
 #include <fcntl.h>
 
-typedef struct of_args {
+typedef struct __terminal {
 
     /*
         args of the terminal
@@ -56,43 +60,49 @@ typedef struct of_args {
     char    *   trash   ;
     char    *   help    ;
 
-} t_args;
+} terminal_args;
 
 
-typedef struct of_dsc {
+typedef struct DescriptorData {
 
     /*
        descriptor for changing the files
     */
 
     int test;
-    FILE        *   p_file      ;
-    FILE        *   p_trash_file;
-    u_int64_t       hsum        ;
-    u_int64_t   *   p_elmn      ;
-    char        *   file_name   ;
+    char        *   file_name       ;
 
-} desc;
+    FILE        *   p_file          ;
+    FILE        *   p_trash_file    ;
+
+    u_int64_t       hashSum         ;
+    u_int64_t   *   p_elmn          ;
+
+} mainDescriptor;
 
 
-extern u_int64_t    set_size_file   (desc*                                  );
+__attribute__((unused)) extern int encrypt_mix( );
 
-extern t_args       parse_args      ( int argc, char *argv[]                );
-extern desc         file_handler    ( t_args p_to_path                      );
+__attribute__((unused)) extern int decrypt_mix( );
 
-extern uint32_t     f_encrypt       (desc * dateList , char *pssw         );
-extern uint32_t     f_decrypt       (desc * pdescr , char *pssw         );
+extern u_int64_t    set_size_file       (mainDescriptor*                                    );
 
-extern uint64_t     hsum            ( char * pssw                           );
-extern uint32_t     h_error         ( const unsigned int *p_result          );
+extern terminal_args    parse_args      (int argc, char *argv[]                             );
+extern mainDescriptor   filesHandler    (terminal_args p_to_path                            );
 
-extern unsigned int importSum       ( desc *_pdescr                         );
-extern unsigned int validateHash    ( desc *__pdescr                        );
+extern uint32_t         f_encrypt       (mainDescriptor * dateList , char *pssw             );
+extern uint32_t         f_decrypt       (mainDescriptor * pdescr , char *pssw               );
 
-extern void         progress_bar    ( uint64_t , uint64_t                   );
-extern bool         is_empty        ( char *str                             );
+extern uint64_t         get_hash_sum    (char * pssw                                        );
+extern uint32_t         issueCheck      (const unsigned int *p_result                       );
 
-extern void         show_help       (                                       );
+extern unsigned int     importSum       (mainDescriptor *_pdescr                            );
+extern unsigned int     validateHash    (mainDescriptor *__pdescr                           );
+
+extern void             progress_bar    ( uint64_t , uint64_t                               );
+extern bool             isEmpty         (char *str                                          );
+
+extern void             show_help       (                                                   );
 
 
 #define     FILE        "-f"

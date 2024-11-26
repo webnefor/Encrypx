@@ -6,15 +6,15 @@ int main(int argc, char *argv[]) {
 
     uint32_t _result;
     uint64_t sum;
-    t_args data_of_terminal;
-    desc _p_files;
+    terminal_args data_of_terminal;
+    mainDescriptor _p_files;
 
     // Terminal data parsing
     data_of_terminal    = parse_args(argc, argv);
 
-    _p_files           = file_handler(data_of_terminal);
+    _p_files           = filesHandler(data_of_terminal);
 
-    _p_files.hsum      = hsum(data_of_terminal.password);
+    _p_files.hashSum      = get_hash_sum(data_of_terminal.password);
 
     _p_files.file_name = data_of_terminal.path;
 
@@ -29,14 +29,14 @@ int main(int argc, char *argv[]) {
     }
 
     //  the hash sum of the password
-    sum = hsum(data_of_terminal.mode);
+    sum = get_hash_sum(data_of_terminal.mode);
 
     //  mode: encrypt or decrypt file
     switch ( sum )
     {
         case ENCRYPT:
             _result = f_encrypt(&_p_files, data_of_terminal.password);
-            h_error(&_result); // event errors
+            issueCheck(&_result); // event errors
             break;
 
         case DECRYPT:
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
                 printf(RED "[-]" DEFAULT " " "The key ain't correct!\n");
                 exit(0);
             }
-            h_error(&_result);
+            issueCheck(&_result);
             break;
 
         default:

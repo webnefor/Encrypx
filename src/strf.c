@@ -2,15 +2,8 @@
 #include "config.h"
 
 
-t_args parse_args(int argc, char *argv[]) {
+terminal_args parse_args(int argc, char *argv[]) {
 /*
-    * Parses command-line arguments and returns a populated t_args structure.
-    *
-    * @param argc Number of command-line arguments.
-    * @param argv Array of command-line arguments.
-    *
-    * @return A t_args structure containing the parsed command-line arguments.
-    *
     * The function processes the following command-line options:
     * - -h: Displays help information and exits.
     * - -f: Specifies the file path.
@@ -27,9 +20,9 @@ t_args parse_args(int argc, char *argv[]) {
     * @note The -s option is currently under development and does not perform any actions.
  */
 
-    t_args temp_data;
-    signed char _data[64];
-    int rcode; // result code
+    terminal_args temp_data;
+    signed char TempData[64];
+    int result_code; // result code
 
     for (int i = 0; i < argc; i++)
     {
@@ -57,29 +50,29 @@ t_args parse_args(int argc, char *argv[]) {
         }
         
         if (strcmp(argv[i], FILE) == 0) {
-            if ((rcode = !is_empty(argv[i+1])))
+            if ((result_code = !isEmpty(argv[i + 1])))
                 temp_data.path = argv[i + 1];
         }
 
         if (strcmp(argv[i], KEY) == 0) {
-            if ((rcode = !is_empty(argv[i+1]))) {
+            if ((result_code = !isEmpty(argv[i + 1]))) {
                 temp_data.password = argv[i + 1];
             }
         }
 
         if (strcmp(argv[i], MODE) == 0) {
-            if ((rcode = !is_empty(argv[i+1]))) {
+            if ((result_code = !isEmpty(argv[i + 1]))) {
                 temp_data.mode = argv[i + 1];
             }
         }
         if (strcmp(argv[i], TRASH) == 0) {
-            if ((rcode = !is_empty(argv[i+1]))) {
+            if ((result_code = !isEmpty(argv[i + 1]))) {
                 temp_data.trash = argv[i + 1];
             }
         }
 
         if (strcmp(argv[i], SPEED) == 0) {
-            if ((rcode = !is_empty(argv[i+1])));
+            if ((result_code = !isEmpty(argv[i + 1])));
                 // in developing
         }
     }
@@ -96,9 +89,9 @@ t_args parse_args(int argc, char *argv[]) {
 }
 
 
-desc file_handler( t_args p_to_path ) {
+mainDescriptor filesHandler(terminal_args p_to_path ) {
 
-    desc  __p_files_descriptor;
+    mainDescriptor  __p_files_descriptor;
 
     __p_files_descriptor.p_file         = fopen(p_to_path.path, DataStream);
 
@@ -122,7 +115,7 @@ desc file_handler( t_args p_to_path ) {
 }
  
 
-uint32_t h_error ( const unsigned int *p_result ) {
+uint32_t issueCheck (const unsigned int *p_result ) {
 
     if (p_result < 0) {
         perror("");
@@ -132,7 +125,7 @@ uint32_t h_error ( const unsigned int *p_result ) {
     return OK;
 }
 
-bool is_empty(char *str) {
+bool isEmpty(char *str) {
 
     /*
      * Checks if a given string is empty or NULL.

@@ -3,7 +3,7 @@
 
 __uint128_t LenDate = 0;
 
-u_int64_t hsum(char *password) {
+u_int64_t get_hash_sum(char *password) {
 
     uint32_t len = strlen(password);
 
@@ -55,7 +55,7 @@ u_int64_t hsum(char *password) {
     return abs(hash);
 }
 
-uint64_t set_size_of_file (desc * p_file ) {
+uint64_t set_size_of_file (mainDescriptor * p_file ) {
 
     fseek(p_file->p_file, 0, SEEK_END);
     LenDate = ftell(p_file->p_file);
@@ -64,7 +64,7 @@ uint64_t set_size_of_file (desc * p_file ) {
     return 0;
 }
 
-uint32_t f_decrypt(desc * dateList, char *password){
+uint32_t f_decrypt(mainDescriptor * dateList, char *password){
 
     long bytesRead;
     uint64_t progress = 0 ;
@@ -75,9 +75,9 @@ uint32_t f_decrypt(desc * dateList, char *password){
 
     int xorValue __attribute__((visibility("hidden")));
 
-    snprintf(__hash, sizeof(__hash), "%d", dateList->hsum);
+    snprintf(__hash, sizeof(__hash), "%d", dateList->hashSum);
 
-    off_t offbyte = LenDate - (strlen(__hash) + strlen(FIND_HASH));
+    off_t offByte = LenDate - (strlen(__hash) + strlen(FIND_HASH));
 
     data_handler = malloc(BUFFER_SIZE);
 
@@ -98,35 +98,37 @@ uint32_t f_decrypt(desc * dateList, char *password){
         for (int i = 0, out = bytesRead; i <= bytesRead; i++, out--)
         {
 
-            data_handler[i]         ^= dateList->hsum;
+            data_handler[i]         ^= dateList->hashSum;
 
-            data_handler[out+i]     += (dateList->hsum & xorValue);
+            data_handler[out+i]     += (dateList->hashSum & xorValue);
             data_handler[i]         -= (C_XOR_3 + (C_XOR_4+i));
 
-            data_handler[i]         ^= (dateList->hsum + i << 2);
+            data_handler[i]         ^= (dateList->hashSum + i << 2);
         }
 
         fwrite(data_handler, sizeof(char), bytesRead, dateList->p_file);
 
         fseek(dateList->p_file, 0 , SEEK_CUR);
+
         progress_bar(progress, LenDate);
+
     } while (bytesRead > 0);
 
     fclose(dateList->p_file);
     free(data_handler);
-    truncate(dateList->file_name, offbyte);
+    truncate(dateList->file_name, offByte);
 
     return OK;
 
 }
 
-uint32_t f_encrypt(desc * dateList, char *password)
+uint32_t f_encrypt(mainDescriptor * dateList, char *password)
 {
     set_size_of_file(dateList);
-    // printf("[[[%lld]]]\n",LenDate );
+
     int xorValue __attribute__((visibility("hidden")));
     int countXor __attribute__((aligned(sizeof(unsigned int))));
-    int __err;
+    int result_code;
 
     char * data_handler;
 
@@ -147,15 +149,16 @@ uint32_t f_encrypt(desc * dateList, char *password)
                           BUFFER_SIZE, dateList->p_file);
 
         fseek(dateList->p_file, -bytesRead , SEEK_CUR);
+
         progress += bytesRead;
 
         for (int i = bytesRead, out = 0; i >= 0 ; i--, out++)
         {
-            data_handler[i]         ^= (dateList->hsum + i << 2);
+            data_handler[i]         ^= (dateList->hashSum + i << 2);
             data_handler[i]         += (C_XOR_3 + (C_XOR_4+i));
 
-            data_handler[out+i]     -= (dateList->hsum & xorValue);
-            data_handler[i]         ^= dateList->hsum;
+            data_handler[out+i]     -= (dateList->hashSum & xorValue);
+            data_handler[i]         ^= dateList->hashSum;
         };
 
         fwrite(data_handler, sizeof(char), bytesRead, dateList->p_file);
@@ -165,18 +168,23 @@ uint32_t f_encrypt(desc * dateList, char *password)
 
     } while (bytesRead > 0);
 
+
     free(data_handler);
 
-    __err = importSum(dateList);
+    result_code = importSum(dateList);
 
-    h_error(&__err);
+#ifdef DEBUG
+    printf("[+] ImportSum %i\n", result_code);
+#endif
+
+    issueCheck(&result_code);
 
     fclose(dateList->p_file);
 
     return OK;
 }
 
-unsigned int importSum(desc * _pdescr) {
+unsigned int importSum(mainDescriptor * _pdescr) {
 
     fseek(_pdescr->p_file, 0, SEEK_END);
 
@@ -184,7 +192,7 @@ unsigned int importSum(desc * _pdescr) {
 
     char buffer[256] = FIND_HASH, *position;
 
-    hash = _pdescr->hsum;
+    hash = _pdescr->hashSum;
 
     position = buffer + strlen(FIND_HASH);
 
@@ -206,7 +214,7 @@ unsigned int importSum(desc * _pdescr) {
     return 0;
 }
 
-unsigned int validateHash(desc * _pdescr) {
+unsigned int validateHash(mainDescriptor * _pdescr) {
 
     set_size_of_file(_pdescr);
 
@@ -215,9 +223,9 @@ unsigned int validateHash(desc * _pdescr) {
 
     position = str_of_the_hash + strlen(FIND_HASH);
 
-    result = sprintf(position, "%lld", _pdescr->hsum);
+    result = sprintf(position, "%lld", _pdescr->hashSum);
 
-    h_error(&result);
+    issueCheck(&result);
 
     bytes_to_read = strlen(position) + strlen(FIND_HASH);
     buffer = (char *)calloc(bytes_to_read * 2, sizeof(char));
@@ -277,3 +285,4 @@ void progress_bar(uint64_t progress, uint64_t total)
     printf("] %.1f%%\r", ratio * 100);
     fflush(stdout); // flush te output buffer
 }
+
