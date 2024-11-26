@@ -67,7 +67,7 @@ uint64_t set_size_of_file (desc * p_file ) {
 uint32_t f_decrypt(desc * dateList, char *password){
 
     long bytesRead;
-    uint64_t progress = 0;
+    uint64_t progress = 0 ;
 
     char * data_handler, __hash[BUFFER_SIZE], c;
 
