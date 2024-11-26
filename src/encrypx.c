@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
 
         case DECRYPT:
             if (!validateHash(&_p_files))
-             // check true or false the hash of the file
+             // check true or false the hash of the file.
               _result = f_decrypt(&_p_files, data_of_terminal.password);
             else
             {

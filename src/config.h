@@ -1,7 +1,7 @@
 
 // this is value for crypting
 
-#define RELEASE       "0.2.1"
+#define RELEASE       "0.1.3"
 
 #define FIND_HASH     "0xAAAAFFFF" // Hash of the file =
 

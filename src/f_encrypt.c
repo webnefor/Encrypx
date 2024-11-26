@@ -97,13 +97,13 @@ uint32_t f_decrypt(desc * dateList, char *password){
 
         for (int i = 0, out = bytesRead; i <= bytesRead; i++, out--)
         {
-            data_handler[i] ^= dateList->hsum;
+            data_handler[i]         ^= dateList->hsum;
 
-            data_handler[out + i] += (dateList->hsum & xorValue);
+            data_handler[out + i]   += (dateList->hsum & xorValue);
 
-            data_handler[i] -= (C_XOR_3 & (C_XOR_4+i));
-            data_handler[i] ^= (dateList->hsum & i);
-            data_handler[out] -= (C_XOR_3);
+            data_handler[i]         -= (C_XOR_3 & (C_XOR_4+i));
+            data_handler[i]         ^= (dateList->hsum & i);
+            data_handler[out]       -= (C_XOR_3);
         }
 
         fwrite(data_handler, sizeof(char), bytesRead, dateList->p_file);
@@ -152,13 +152,13 @@ uint32_t f_encrypt(desc * dateList, char *password)
 
         for (int i = bytesRead, out = 0; i >= 0 ; i--, out++)
         {
-            data_handler[i]     ^= (dateList->hsum & i);
-            data_handler[i]     += (C_XOR_3 & (C_XOR_4+i));
-            data_handler[out]   += (C_XOR_3);
+            data_handler[i]         ^= (dateList->hsum & i);
+            data_handler[i]         += (C_XOR_3 & (C_XOR_4+i));
+            data_handler[out]       += (C_XOR_3);
 
-            data_handler[out + i] -= (dateList->hsum & xorValue);
+            data_handler[out + i]   -= (dateList->hsum & xorValue);
 
-            data_handler[i] ^= dateList->hsum;
+            data_handler[i]         ^= dateList->hsum;
         };
 
         fwrite(data_handler, sizeof(char), bytesRead, dateList->p_file);

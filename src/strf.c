@@ -164,7 +164,7 @@ void show_help() {
     printf  (   " -h, --help\tdisplay this help and exit\n"                           ); 
     printf  (   " -v, --version\tdisplay version and exit\n"                          );
     printf  (   "\n"                                                                  );
-    printf  (   "example: ./encrypx -f date.* -t trash.data* -k qwerty -m encrypt\n"                                                                  );
+    printf  (   "Example: ./encrypx -f date.* -t trash.data* -k qwerty -m encrypt\n"                                                                  );
     printf  (   "\n"                                                                  );
 
     // see ya
