@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
               _result = f_decrypt(&_p_files, data_of_terminal.password);
             else
             {
-                printf(RED "[-]" DEFAULT " " "The key ain't correct!\n");
+                printf(RED "[-]" DEFAULT " " "The key is not correct\n");
                 exit(0);
             }
             issueCheck(&_result);

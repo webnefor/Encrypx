@@ -17,8 +17,7 @@
 
 // the value if there's some errors
 #define FAILED        (-0x01)
-#define OK            0x0
-
+#define OK            (0x0)
 
 /*      DEBUG OUTPUT    */
 //#define DEBUG
@@ -29,8 +28,8 @@
 
 #define BUFFER_SIZE   (FASTER << 6)
 
-#define DataStream    ("r+a+w+b")
-#define RBW           ("rb+w")
+#define RAW           "r+a+w+b"
+#define RBW           "rb+w"
 
 #define GREEN         "\033[32m"
 #define RED           "\033[31m"
@@ -76,7 +75,6 @@ typedef struct DescriptorData {
     FILE        *   p_trash_file    ;
 
     u_int64_t       hashSum         ;
-    u_int64_t   *   p_elmn          ;
 
 } mainDescriptor;
 
@@ -88,13 +86,13 @@ __attribute__((unused)) extern int decrypt_mix( );
 extern u_int64_t    set_size_file       (mainDescriptor*                                    );
 
 extern terminal_args    parse_args      (int argc, char *argv[]                             );
-extern mainDescriptor   filesHandler    (terminal_args p_to_path                            );
+extern mainDescriptor   filesHandler    (terminal_args PathTo                               );
 
 extern uint32_t         f_encrypt       (mainDescriptor * dateList , char *pssw             );
 extern uint32_t         f_decrypt       (mainDescriptor * pdescr , char *pssw               );
 
 extern uint64_t         get_hash_sum    (char * pssw                                        );
-extern uint32_t         issueCheck      (const unsigned int *p_result                       );
+extern uint32_t         issueCheck      (const unsigned int *result                         );
 
 extern unsigned int     importSum       (mainDescriptor *_pdescr                            );
 extern unsigned int     validateHash    (mainDescriptor *__pdescr                           );

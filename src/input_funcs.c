@@ -20,7 +20,7 @@ terminal_args parse_args(int argc, char *argv[]) {
     * @note The -s option is currently under development and does not perform any actions.
  */
 
-    terminal_args temp_data;
+    terminal_args terminalArgs;
     signed char TempData[64];
     int result_code; // result code
 
@@ -51,23 +51,23 @@ terminal_args parse_args(int argc, char *argv[]) {
         
         if (strcmp(argv[i], FILE) == 0) {
             if ((result_code = !isEmpty(argv[i + 1])))
-                temp_data.path = argv[i + 1];
+                terminalArgs.path = argv[i + 1];
         }
 
         if (strcmp(argv[i], KEY) == 0) {
             if ((result_code = !isEmpty(argv[i + 1]))) {
-                temp_data.password = argv[i + 1];
+                terminalArgs.password = argv[i + 1];
             }
         }
 
         if (strcmp(argv[i], MODE) == 0) {
             if ((result_code = !isEmpty(argv[i + 1]))) {
-                temp_data.mode = argv[i + 1];
+                terminalArgs.mode = argv[i + 1];
             }
         }
         if (strcmp(argv[i], TRASH) == 0) {
             if ((result_code = !isEmpty(argv[i + 1]))) {
-                temp_data.trash = argv[i + 1];
+                terminalArgs.trash = argv[i + 1];
             }
         }
 
@@ -77,47 +77,47 @@ terminal_args parse_args(int argc, char *argv[]) {
         }
     }
 
-    if (temp_data.path == NULL || temp_data.password == NULL || temp_data.mode == NULL || temp_data.trash == NULL) {
+    if (terminalArgs.path == NULL || terminalArgs.password == NULL || terminalArgs.mode == NULL || terminalArgs.trash == NULL) {
         puts("encrypx: missing required arguments");
         exit(-1);
     }
 
-    if (strlen(temp_data.password) < 16)
+    if (strlen(terminalArgs.password) < 16)
         puts(ORANGE "[WARNING]" " " DEFAULT "Your password is too weak");
 
-    return temp_data;
+    return terminalArgs;
 }
 
 
-mainDescriptor filesHandler(terminal_args p_to_path ) {
+mainDescriptor filesHandler(terminal_args PathTo) {
 
-    mainDescriptor  __p_files_descriptor;
+    mainDescriptor  filesDescriptor;
 
-    __p_files_descriptor.p_file         = fopen(p_to_path.path, DataStream);
+    filesDescriptor.p_file         = fopen(PathTo.path, RAW);
 
-    __p_files_descriptor.p_trash_file   = fopen(p_to_path.trash, RBW);
-
-    if ( __p_files_descriptor.p_file == NULL ) 
+    if (filesDescriptor.p_file == NULL)
     {
        perror(RED "[-f] Wait");
        puts(DEFAULT"Try -h to show help");
        exit(FAILED);
     }
 
-    if ( __p_files_descriptor.p_trash_file == NULL ) 
+    filesDescriptor.p_trash_file   = fopen(PathTo.trash, RBW);
+
+    if (filesDescriptor.p_trash_file == NULL)
     {
        perror(RED "[-t] Wait");
        puts(DEFAULT"Try -h to show help");
        exit(FAILED);
     }
 
-   return __p_files_descriptor;
+   return filesDescriptor;
 }
  
 
-uint32_t issueCheck (const unsigned int *p_result ) {
+uint32_t issueCheck (const unsigned int *result ) {
 
-    if (p_result < 0) {
+    if (result < 0) {
         perror("");
         return FAILED;
     };
@@ -149,16 +149,16 @@ bool isEmpty(char *str) {
 
 void show_help() {
 
-    printf  (   "Options:\n"                                                          );
-    printf  (   " -f, --file \tMain file for encrypting\n"                            );
-    printf  (   " -t, --trash\tThe trash file [in developing]\n"                      );
-    printf  (   " -k, --key\tYour password for encrypting\n"                          );
-    printf  (   " -m, --mode\tMode of regime,has the encrypt & decrypt\n"             );
-    printf  (   " -h, --help\tdisplay this help and exit\n"                           ); 
-    printf  (   " -v, --version\tdisplay version and exit\n"                          );
-    printf  (   "\n"                                                                  );
-    printf  (   "Example: ./encrypx -f date.* -t trash.data* -k qwerty -m encrypt\n"                                                                  );
-    printf  (   "\n"                                                                  );
+    printf  (   "Options:\n"                                                           );
+    printf  (   "\t-f, --file \tMain file for encrypting\n"                            );
+    printf  (   "\t-t, --trash\tThe trash file [in developing]\n"                      );
+    printf  (   "\t-k, --key\tYour password for encrypting\n"                          );
+    printf  (   "\t-m, --mode\tMode of regime,has the encrypt & decrypt\n"             );
+    printf  (   "\t-h, --help\tdisplay this help and exit\n"                           );
+    printf  (   "\t-v, --version\tdisplay version and exit\n"                          );
+    printf  (   "\n"                                                                   );
+    printf  (   "\tExample: ./encrypx -f date.* -t trash.data* -k qwerty -m encrypt\n" );
+    printf  (   "\n"                                                                   );
 
     // see ya
 }
