@@ -1,7 +1,7 @@
 
 #include "config.h"
 
-__uint128_t move_from = 0;
+__uint128_t LenDate = 0;
 
 u_int64_t hsum(char *password) {
 
@@ -58,7 +58,7 @@ u_int64_t hsum(char *password) {
 uint64_t set_size_of_file (desc * p_file ) {
 
     fseek(p_file->p_file, 0, SEEK_END);
-    move_from = ftell(p_file->p_file);
+    LenDate = ftell(p_file->p_file);
     fseek(p_file->p_file, 0, SEEK_SET);
 
     return 0;
@@ -77,7 +77,7 @@ uint32_t f_decrypt(desc * dateList, char *password){
 
     snprintf(__hash, sizeof(__hash), "%d", dateList->hsum);
 
-    off_t offbyte = move_from - (strlen(__hash) + strlen(FIND_HASH));
+    off_t offbyte = LenDate - (strlen(__hash) + strlen(FIND_HASH));
 
     data_handler = malloc(BUFFER_SIZE);
 
@@ -97,20 +97,19 @@ uint32_t f_decrypt(desc * dateList, char *password){
 
         for (int i = 0, out = bytesRead; i <= bytesRead; i++, out--)
         {
+
             data_handler[i]         ^= dateList->hsum;
 
-            data_handler[out + i]   += (dateList->hsum & xorValue);
+            data_handler[out+i]     += (dateList->hsum & xorValue);
+            data_handler[i]         -= (C_XOR_3 + (C_XOR_4+i));
 
-            data_handler[i]         -= (C_XOR_3 & (C_XOR_4+i));
-            data_handler[i]         ^= (dateList->hsum & i);
-            data_handler[out]       -= (C_XOR_3);
+            data_handler[i]         ^= (dateList->hsum + i << 2);
         }
 
         fwrite(data_handler, sizeof(char), bytesRead, dateList->p_file);
 
         fseek(dateList->p_file, 0 , SEEK_CUR);
-        progress_bar(progress, move_from);
-
+        progress_bar(progress, LenDate);
     } while (bytesRead > 0);
 
     fclose(dateList->p_file);
@@ -124,7 +123,7 @@ uint32_t f_decrypt(desc * dateList, char *password){
 uint32_t f_encrypt(desc * dateList, char *password)
 {
     set_size_of_file(dateList);
-    // printf("[[[%lld]]]\n",move_from );
+    // printf("[[[%lld]]]\n",LenDate );
     int xorValue __attribute__((visibility("hidden")));
     int countXor __attribute__((aligned(sizeof(unsigned int))));
     int __err;
@@ -152,19 +151,17 @@ uint32_t f_encrypt(desc * dateList, char *password)
 
         for (int i = bytesRead, out = 0; i >= 0 ; i--, out++)
         {
-            data_handler[i]         ^= (dateList->hsum & i);
-            data_handler[i]         += (C_XOR_3 & (C_XOR_4+i));
-            data_handler[out]       += (C_XOR_3);
+            data_handler[i]         ^= (dateList->hsum + i << 2);
+            data_handler[i]         += (C_XOR_3 + (C_XOR_4+i));
 
-            data_handler[out + i]   -= (dateList->hsum & xorValue);
-
+            data_handler[out+i]     -= (dateList->hsum & xorValue);
             data_handler[i]         ^= dateList->hsum;
         };
 
         fwrite(data_handler, sizeof(char), bytesRead, dateList->p_file);
 
         fseek(dateList->p_file, 0 , SEEK_CUR);
-        progress_bar(progress, move_from);
+        progress_bar(progress, LenDate);
 
     } while (bytesRead > 0);
 
